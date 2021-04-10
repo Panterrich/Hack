@@ -5,7 +5,7 @@
 
 //===========================================================
 
-int Create_window(sf::Music* music);
+int Create_window(sf:: Music* music, sf:: Music* joke_music);
 
 void Set_text(sf::Text* text, const sf::Font& font, const sf::Color color, size_t font_size, float x, float y, const char* str);
 
@@ -26,24 +26,34 @@ void Write_buffer(FILE* file, struct Text* bin);
 int main()
 {
     sf::Music music;
+    sf::Music joke_music;
 
     if (!music.openFromFile("EVA.ogg"))
     {
         printf("ERROR: Couldn't play \"EVA.ogg\"\n");
         return 1;
     }
+
+    if (!joke_music.openFromFile("EVA_GACHI.ogg"))
+    {
+        printf("ERROR: Couldn't play \"EVA_GACHI.ogg\"\n");
+        return 1;
+    }
         
     music.play();
-    music.setVolume(50);
+    music.setVolume(5);
 
-    Create_window(&music);
+    joke_music.play();
+    joke_music.setVolume(0);
+
+    Create_window(&music, &joke_music);
     
     music.stop();
 
     return 0;
 }
 
-int Create_window(sf:: Music* music)
+int Create_window(sf:: Music* music, sf:: Music* joke_music)
 {
     sf::RenderWindow window(sf::VideoMode(1920, 1980), "DDOS", sf::Style::Default);
     //window.setVerticalSyncEnabled(true);
@@ -88,21 +98,6 @@ int Create_window(sf:: Music* music)
     crack_button_image.setScale(2.5f, 2.5f);
     crack_button_image.setTexture(crack_button);
 
-    sf::Texture mute_button;
-    sf::Sprite  mute_button_image;
-
-    if (!mute_button.loadFromFile("mute.png"))
-    {
-        printf("ERROR: Couldn't display \"mute.png\"\n");
-        return 1;
-    }
-    
-    mute_button_image.setPosition(1700.0f, 50.0f);
-    mute_button_image.setScale(0.8f, 0.8f);
-    mute_button_image.setTexture(mute_button);
-    //mute_button_image.setColor(sf::Color(20, 250, 20));
-
-
     sf::Texture unmute_button;
     sf::Sprite  unmute_button_image;
 
@@ -116,9 +111,11 @@ int Create_window(sf:: Music* music)
     unmute_button_image.setScale(0.8f, 0.8f);
     unmute_button_image.setTexture(unmute_button);
 
-    bool music_on         = true;
+    bool music_off        = true;
+    int  game             = 10;
     bool input_resolution = false;
     int  result           = -1;
+    bool false_click      = true;
     sf::String user_input;
 
     sf::Text crack_text;
@@ -137,10 +134,13 @@ int Create_window(sf:: Music* music)
     Set_text(&error_input_text, font, sf::Color::Green, 60, 810.0f, 420.0f, "ERROR: file not found!");
     
     sf::Text patch_text;
-    Set_text(&patch_text, font, sf::Color::Green, 60, 810.0f, 420.0f, "DDOS attack сomplementation!!");
+    Set_text(&patch_text, font, sf::Color::Green, 60, 810.0f, 420.0f, "DDOS attack complementation!!");
    
     while (window.isOpen())
     {
+        if (!(music_off) && game) joke_music->setVolume(100);
+        if (game == 0) false_click = true;
+
         sf::Event Event;
 
         while (window.pollEvent(Event))
@@ -155,12 +155,24 @@ int Create_window(sf:: Music* music)
                     {
                         sf::Vector2i mouse_pos = sf::Mouse::getPosition(window);
                         sf::Vector2f mouse_pos_f(static_cast<float>(mouse_pos.x), static_cast<float>(mouse_pos.y));
+                        
+                        if (unmute_button_image.getGlobalBounds().contains(mouse_pos_f))
+                        {
+                            exit_button_image.setColor(sf::Color(255, 255, 255));
+                            crack_button_image.setColor(sf::Color(255, 255, 255));
 
-                        if (exit_button_image.getGlobalBounds().contains(mouse_pos_f))
+                            music_off = false;
+                            music->setVolume(0);
+                            game--;
+
+                            unmute_button_image.setPosition(rand() % 1800, rand() % 900);
+                            unmute_button_image.setColor(sf::Color(120, 255, 255));
+                        }
+
+                        else if (exit_button_image.getGlobalBounds().contains(mouse_pos_f))
                         {
                             exit_button_image.setColor(sf::Color(250, 20, 20));
                             crack_button_image.setColor(sf::Color(255, 255, 255));
-                            mute_button_image.setColor(sf::Color(255, 255, 255));
                             unmute_button_image.setColor(sf::Color(255, 255, 255));
                         }
 
@@ -169,30 +181,12 @@ int Create_window(sf:: Music* music)
                             exit_button_image.setColor(sf::Color(255, 255, 255));
                             crack_button_image.setColor(sf::Color(20, 250, 20));
                             unmute_button_image.setColor(sf::Color(255, 255, 255));
-                            mute_button_image.setColor(sf::Color(255, 255, 255));
-                        }
-
-                        else if (music_on && unmute_button_image.getGlobalBounds().contains(mouse_pos_f))
-                        {
-                            exit_button_image.setColor(sf::Color(255, 255, 255));
-                            crack_button_image.setColor(sf::Color(255, 255, 255));
-                            unmute_button_image.setColor(sf::Color(120, 255, 255));
-                            mute_button_image.setColor(sf::Color(255, 255, 255));
                         }
                         
-                        else if (!music_on && mute_button_image.getGlobalBounds().contains(mouse_pos_f))
-                        {
-                            exit_button_image.setColor(sf::Color(255, 255, 255));
-                            crack_button_image.setColor(sf::Color(255, 255, 255));
-                            unmute_button_image.setColor(sf::Color(255, 255, 255));
-                            mute_button_image.setColor(sf::Color(20, 250, 20));
-                        }
-
                         else
                         {
                             exit_button_image.setColor(sf::Color(255, 255, 255));
                             crack_button_image.setColor(sf::Color(255, 255, 255));
-                            mute_button_image.setColor(sf::Color(255, 255, 255));
                             unmute_button_image.setColor(sf::Color(255, 255, 255));
                         }
                     }
@@ -205,7 +199,12 @@ int Create_window(sf:: Music* music)
                     
                     if (exit_button_image.getGlobalBounds().contains(mouse_pos_f))
                     {
-                        window.close();
+                        false_click = false;
+
+                        if ((false_click == false) && (game && music_off || !game && !music_off))
+                        {
+                            window.close();
+                        }
                     }
 
                     if (crack_button_image.getGlobalBounds().contains(mouse_pos_f))
@@ -214,17 +213,6 @@ int Create_window(sf:: Music* music)
                         result = -1;
                     }
 
-                    if (music_on && unmute_button_image.getGlobalBounds().contains(mouse_pos_f))
-                    {
-                        music_on = false;
-                        music->setVolume(0);
-                    }
-
-                    else if ((!music_on) && mute_button_image.getGlobalBounds().contains(mouse_pos_f))
-                    {
-                        music_on = true;
-                        music->setVolume(50);
-                    }
                 }
                 break;
 
@@ -266,16 +254,11 @@ int Create_window(sf:: Music* music)
 
         window.clear();
         window.draw(background_image);
-        window.draw(exit_button_image);
-        window.draw(exit_text);
 
-        if (music_on)
+        if (false_click || game && music_off || !game && !music_off)
         {
-            window.draw(unmute_button_image);
-        }
-        else
-        {
-            window.draw(mute_button_image);
+            window.draw(exit_button_image);
+            window.draw(exit_text);
         }
 
         if (input_resolution) 
@@ -310,6 +293,7 @@ int Create_window(sf:: Music* music)
             default: break;
         }
 
+        window.draw(unmute_button_image);
         window.display();
     }
 
